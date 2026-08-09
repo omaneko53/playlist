@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 📱 모바일/데스크톱 모드에서도 PC 너비(1280px) 기준으로 고정 출력되도록 설정 -->
+  <meta name="viewport" content="width=1280">
   <title>캐릭터 테마 플레이리스트</title>
 
   <!-- ✨ 구글 폰트 로드 -->
@@ -10,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <!-- 🎨 Font Awesome (기기 차이 없는 깔끔한 아이콘 라이브러리) -->
+  <!-- 🎨 Font Awesome 아이콘 라이브러리 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- 📸 이미지 저장(캡처)을 위한 html2canvas 라이브러리 -->
@@ -18,10 +19,10 @@
 
   <style>
     :root {
-      --outer-bg-color: #f4f4f9; /* 바깥 전체 배경 색상 변수 */
+      --outer-bg-color: #f4f4f9;
       --card-bg: #ffffff;
       --primary-color: #6c5ce7;
-      --card-inner-bg: #fafafa; /* 카드 내부 배경색 변수 */
+      --card-inner-bg: #fafafa;
       --text-main: #2d3436;
       --text-sub: #8c9b9e;
       --border-radius: 20px;
@@ -34,24 +35,25 @@
       font-family: 'Pretendard', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
+    /* 🖥️ 최소 너비를 1280px로 고정하여 찌그러짐 방지 */
     body {
       background-color: var(--outer-bg-color);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      min-width: 1280px;
       padding: 30px 20px;
       transition: background-color 0.3s ease;
     }
 
-    /* 캡처할 외부 래퍼 */
+    /* 캡처할 외부 래퍼 고정 폭 지정 */
     .capture-outer-wrapper {
       background-color: var(--outer-bg-color);
       padding: 50px;
       border-radius: 28px;
       display: inline-block;
-      max-width: 1220px;
-      width: 100%;
+      width: 1200px; /* PC 전용 규격으로 너비 고정 */
       transition: background-color 0.3s ease;
     }
 
@@ -311,10 +313,9 @@
       font-size: 1.15rem;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
-      padding: 0; /* 캡처 쏠림 방지를 위해 패딩 0 처리 */
+      padding: 0;
     }
 
-    /* 재생 시각 보정을 위해 아이콘 위치 세부 조정 */
     .play-btn i {
       margin-left: 3px;
     }
@@ -722,7 +723,7 @@
 
     .crop-btn.confirm:hover { opacity: 0.9; }
 
-    /* 📱 iOS 전용 저장 모달 스타일 */
+    /* 📱 모바일/iOS 저장 모달 스타일 */
     .save-modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -783,15 +784,6 @@
     .is-exporting .delete-track-btn,
     .is-exporting .color-picker-group {
       display: none !important;
-    }
-
-    @media (max-width: 868px) {
-      .playlist-container {
-        flex-direction: column;
-      }
-      .capture-outer-wrapper {
-        padding: 20px;
-      }
     }
   </style>
 </head>
@@ -897,7 +889,7 @@
     </div>
   </div>
 
-  <!-- [📱 iOS 저장 모달 레이어] -->
+  <!-- [📱 모바일/iOS 저장 모달 레이어] -->
   <div class="save-modal-overlay" id="saveModal">
     <div class="save-card">
       <p>👇 이미지를 꾹 눌러서 [사진에 저장]을 선택하세요!</p>
@@ -928,8 +920,8 @@
       saveData();
     });
 
-    function isIOS() {
-      return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    function isMobileOrIOS() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
@@ -953,7 +945,7 @@
 
         const dataUrl = canvas.toDataURL('image/png');
 
-        if (isIOS()) {
+        if (isMobileOrIOS()) {
           const saveModal = document.getElementById('saveModal');
           const saveModalImg = document.getElementById('saveModalImg');
           saveModalImg.src = dataUrl;
@@ -1086,10 +1078,10 @@
         document.getElementById('main-art').removeAttribute('src');
 
         const defaultTracks = [
-          { title: '테마곡 제목 2', duration: '09:07', artist: '아티스트 2', keywords: '#키워드 #선정이유 등', lyrics: '가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력', currentTime: '03:26' },
-          { title: '테마곡 제목 3', duration: '03:26', artist: '아티스트 3', keywords: '#키워드 #선정이유 등', lyrics: '박스 클릭 시 왼쪽으로 옮겨져\n더 편하게 편집 가능합니다', currentTime: '03:26' },
-          { title: '테마곡 제목 4', duration: '06:19', artist: '아티스트 4', keywords: '#키워드 #선정이유 등', lyrics: '유튜브 링크 삽입 시\n영상 썸네일이 자동으로 적용됩니다', currentTime: '03:23' },
-          { title: '테마곡 제목 5', duration: '06:03', artist: '아티스트 5', keywords: '#키워드 #선정이유 등', lyrics: '가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력', currentTime: '05:17' }
+          { title: '테마곡 제목 2', duration: '09:07', artist: '아티스트 2', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '03:26' },
+          { title: '테마곡 제목 3', duration: '03:26', artist: '아티스트 3', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '박스 클릭 시 왼쪽으로 옮겨져\n더 편하게 편집 가능합니다', currentTime: '03:26' },
+          { title: '테마곡 제목 4', duration: '06:19', artist: '아티스트 4', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '유튜브 링크 삽입 시\n영상 썸네일이 자동으로 적용됩니다', currentTime: '03:23' },
+          { title: '테마곡 제목 5', duration: '06:03', artist: '아티스트 5', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '05:17' }
         ];
         defaultTracks.forEach(track => trackList.appendChild(createTrackItemHTML(track)));
         updateProgressBar();
