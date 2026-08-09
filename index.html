@@ -270,6 +270,7 @@
     .controls {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 22px;
     }
 
@@ -280,9 +281,17 @@
       color: var(--text-main);
       cursor: pointer;
       transition: transform 0.1s ease, color 0.2s ease;
-      display: flex;
+      display: inline-flex;
       justify-content: center;
       align-items: center;
+      line-height: 1;
+    }
+
+    .control-btn i {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
 
     .control-btn:hover {
@@ -296,13 +305,18 @@
       border-radius: 50%;
       background: var(--primary-color);
       color: white;
-      display: flex;
+      display: inline-flex;
       justify-content: center;
       align-items: center;
       font-size: 1.15rem;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
-      padding-left: 3px;
+      padding: 0; /* 캡처 쏠림 방지를 위해 패딩 0 처리 */
+    }
+
+    /* 재생 시각 보정을 위해 아이콘 위치 세부 조정 */
+    .play-btn i {
+      margin-left: 3px;
     }
 
     .play-btn:hover {
@@ -625,7 +639,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      touch-action: none; /* 📱 터치 드래그 시 모바일 스크롤 방지 */
+      touch-action: none;
     }
 
     .crop-target-img {
@@ -641,7 +655,7 @@
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
       cursor: move;
       box-sizing: border-box;
-      touch-action: none; /* 📱 모바일 스크롤 방지 */
+      touch-action: none;
     }
 
     .crop-box::before, .crop-box::after {
@@ -663,7 +677,7 @@
 
     .crop-handle {
       position: absolute;
-      width: 20px; /* 📱 모바일 터치가 편하도록 조절점 확대 */
+      width: 20px;
       height: 20px;
       background: #ffffff;
       border: 2px solid var(--primary-color);
@@ -1055,7 +1069,6 @@
       trackList.innerHTML = '';
 
       if (!saved) {
-        // 기본 텍스트 및 칼라 복원
         outerBgColorPicker.value = '#f4f4f9';
         primaryColorPicker.value = '#6c5ce7';
         cardBgColorPicker.value = '#fafafa';
@@ -1199,7 +1212,6 @@
       cropBox.style.height = boxSize + 'px';
     }
 
-    // 📱 마우스와 터치 이벤트를 통합 처리하는 공통 함수
     function handleDragStart(e) {
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
