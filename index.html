@@ -337,7 +337,7 @@
     .header-btn-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
     }
 
     .color-picker-group {
@@ -377,16 +377,26 @@
       border-radius: 50%;
     }
 
-    .add-track-btn, .export-img-btn {
+    .add-track-btn, .export-img-btn, .reset-btn {
       background: #f0edff;
       color: var(--primary-color);
       border: 1px solid rgba(0,0,0,0.1);
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 12px;
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
+    }
+
+    .reset-btn {
+      background: #fff0f0;
+      color: #e53e3e;
+    }
+
+    .reset-btn:hover {
+      background: #e53e3e;
+      color: white;
     }
 
     .export-img-btn {
@@ -755,6 +765,7 @@
 
     .is-exporting .add-track-btn,
     .is-exporting .export-img-btn,
+    .is-exporting .reset-btn,
     .is-exporting .delete-track-btn,
     .is-exporting .color-picker-group {
       display: none !important;
@@ -838,6 +849,7 @@
               </div>
             </div>
 
+            <button class="reset-btn" onclick="resetData()">🔄 초기화</button>
             <button class="add-track-btn" onclick="addTrack()">+ 새 트랙 추가</button>
             <button class="export-img-btn" onclick="exportToImage()">📷 이미지로 저장</button>
           </div>
@@ -1043,6 +1055,23 @@
       trackList.innerHTML = '';
 
       if (!saved) {
+        // 기본 텍스트 및 칼라 복원
+        outerBgColorPicker.value = '#f4f4f9';
+        primaryColorPicker.value = '#6c5ce7';
+        cardBgColorPicker.value = '#fafafa';
+        document.documentElement.style.setProperty('--outer-bg-color', '#f4f4f9');
+        document.documentElement.style.setProperty('--primary-color', '#6c5ce7');
+        document.documentElement.style.setProperty('--card-inner-bg', '#fafafa');
+
+        document.getElementById('playlist-title').innerText = 'Character Theme Tracks';
+        document.getElementById('main-title').innerText = '테마곡 제목 1';
+        document.getElementById('main-artist').innerText = '아티스트 1';
+        document.getElementById('main-keywords').innerText = '#키워드 #선정이유 #핵심파트 #포인트 등';
+        document.getElementById('main-lyrics').innerText = '곡 가사를 직접 입력하면 됩니다\n길어도 OK 그것이 뚱레이리스트니까...';
+        document.getElementById('main-current-time').innerText = '05:20';
+        document.getElementById('main-duration').innerText = '06:21';
+        document.getElementById('main-art').removeAttribute('src');
+
         const defaultTracks = [
           { title: '테마곡 제목 2', duration: '09:07', artist: '아티스트 2', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '03:26' },
           { title: '테마곡 제목 3', duration: '03:26', artist: '아티스트 3', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '박스 클릭 시 왼쪽으로 옮겨져\n더 편하게 편집 가능합니다', currentTime: '03:26' },
@@ -1050,6 +1079,7 @@
           { title: '테마곡 제목 5', duration: '06:03', artist: '아티스트 5', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '05:17' }
         ];
         defaultTracks.forEach(track => trackList.appendChild(createTrackItemHTML(track)));
+        updateProgressBar();
         return;
       }
 
@@ -1093,6 +1123,13 @@
         }
       } catch (e) {
         console.error('데이터 불러오기 오류:', e);
+      }
+    }
+
+    function resetData() {
+      if (confirm('모든 내용을 초기화하고 처음 상태로 되돌리시겠습니까? 작성 중인 내용이 지워집니다.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        loadData();
       }
     }
 
