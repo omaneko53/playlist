@@ -1073,10 +1073,10 @@
         document.getElementById('main-art').removeAttribute('src');
 
         const defaultTracks = [
-          { title: '테마곡 제목 2', duration: '09:07', artist: '아티스트 2', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '03:26' },
-          { title: '테마곡 제목 3', duration: '03:26', artist: '아티스트 3', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '박스 클릭 시 왼쪽으로 옮겨져\n더 편하게 편집 가능합니다', currentTime: '03:26' },
-          { title: '테마곡 제목 4', duration: '06:19', artist: '아티스트 4', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '유튜브 링크 삽입 시\n영상 썸네일이 자동으로 적용됩니다', currentTime: '03:23' },
-          { title: '테마곡 제목 5', duration: '06:03', artist: '아티스트 5', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '05:17' }
+          { title: '테마곡 제목 2', duration: '09:07', artist: '아티스트 2', keywords: '#키워드 #선정이유 등', lyrics: '가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력', currentTime: '03:26' },
+          { title: '테마곡 제목 3', duration: '03:26', artist: '아티스트 3', keywords: '#키워드 #선정이유 등', lyrics: '박스 클릭 시 왼쪽으로 옮겨져\n더 편하게 편집 가능합니다', currentTime: '03:26' },
+          { title: '테마곡 제목 4', duration: '06:19', artist: '아티스트 4', keywords: '#키워드 #선정이유 등', lyrics: '유튜브 링크 삽입 시\n영상 썸네일이 자동으로 적용됩니다', currentTime: '03:23' },
+          { title: '테마곡 제목 5', duration: '06:03', artist: '아티스트 5', keywords: '#키워드 #선정이유 등', lyrics: '가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력', currentTime: '05:17' }
         ];
         defaultTracks.forEach(track => trackList.appendChild(createTrackItemHTML(track)));
         updateProgressBar();
