@@ -1,47 +1,1504 @@
-async function exportToImage() {
-  const wrapper = document.getElementById('capture-wrapper');
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <!-- 📱 모바일/데스크톱 모드에서도 PC 너비(1280px) 기준으로 고정 출력되도록 설정 -->
+  <meta name="viewport" content="width=1280">
+  <title>캐릭터 테마 플레이리스트</title>
 
-  wrapper.classList.add('is-exporting');
+  <!-- ✨ 구글 폰트 로드 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  try {
-    const currentOuterBg = getComputedStyle(document.documentElement).getPropertyValue('--outer-bg-color').trim();
+  <!-- 🎨 Font Awesome 아이콘 라이브러리 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    const canvas = await html2canvas(wrapper, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: currentOuterBg || '#f4f4f9'
+  <!-- 📸 이미지 저장(캡처)을 위한 html2canvas 라이브러리 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --outer-bg-color: #f4f4f9;
+      --card-bg: #ffffff;
+      --primary-color: #6c5ce7;
+      --card-inner-bg: #fafafa;
+      --text-main: #2d3436;
+      --text-sub: #8c9b9e;
+      --border-radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* 🖥️ 최소 너비를 1280px로 고정하여 찌그러짐 방지 */
+    body {
+      background-color: var(--outer-bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-width: 1280px;
+      padding: 30px 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    /* 캡처할 외부 래퍼 고정 폭 지정 */
+    .capture-outer-wrapper {
+      background-color: var(--outer-bg-color);
+      padding: 50px;
+      border-radius: 28px;
+      display: inline-block;
+      width: 1200px; /* PC 전용 규격으로 너비 고정 */
+      transition: background-color 0.3s ease;
+    }
+
+    .playlist-container {
+      display: flex;
+      gap: 35px;
+      background: var(--card-bg);
+      padding: 35px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+      width: 100%;
+    }
+
+    [contenteditable="true"] {
+      outline: none;
+      transition: background-color 0.2s, border-radius 0.2s;
+      border-bottom: 1px dashed transparent;
+      padding: 2px 4px;
+      margin: -2px -4px;
+      border-radius: 4px;
+      background-color: transparent !important;
+    }
+
+    [contenteditable="true"] * {
+      background-color: transparent !important;
+    }
+
+    [contenteditable="true"]:hover {
+      background-color: rgba(108, 92, 231, 0.08) !important;
+      border-bottom-color: var(--primary-color);
+    }
+
+    [contenteditable="true"]:focus {
+      background-color: rgba(108, 92, 231, 0.15) !important;
+      border-bottom-color: var(--primary-color);
+    }
+
+    .player-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-inner-bg);
+      padding: 28px;
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      transition: background-color 0.3s ease;
+    }
+
+    .album-art-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .placeholder-icon {
+      font-size: 3rem;
+      color: rgba(255, 255, 255, 0.8);
+      pointer-events: none;
+    }
+
+    .album-art {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .album-art:not([src]), .album-art[src=""] {
+      display: none;
+    }
+
+    .album-art-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      gap: 10px;
+      z-index: 2;
+    }
+
+    .album-art-wrapper:hover .album-art-overlay {
+      opacity: 1;
+    }
+
+    .art-opt-btn {
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s ease;
+      width: 80%;
+      text-align: center;
+    }
+
+    .art-opt-btn:hover {
+      background: white;
+      color: var(--primary-color);
+    }
+
+    .song-info {
+      text-align: center;
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    .song-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      display: inline-block;
+    }
+
+    .artist-name {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      display: inline-block;
+    }
+
+    .keywords-wrapper {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .song-keywords {
+      font-size: 0.85rem;
+      color: #a0aec0;
+      font-weight: 500;
+      letter-spacing: -0.2px;
+    }
+
+    .lyrics-wrapper {
+      width: 100%;
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0,0,0,0.05);
+      text-align: center;
+    }
+
+    .lyrics-text {
+      font-size: 0.9rem;
+      color: #4a5568;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      font-style: italic;
+    }
+
+    .progress-container {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--primary-color);
+      border-radius: 3px;
+      transition: width 0.1s linear, background-color 0.3s ease;
+    }
+
+    .time-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .time-editable {
+      display: inline-block;
+      min-width: 35px;
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+    }
+
+    .control-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: transform 0.1s ease, color 0.2s ease;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .control-btn i {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .control-btn:hover {
+      transform: scale(1.1);
+      color: var(--primary-color);
+    }
+
+    .play-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: white;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.15rem;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      transition: background-color 0.3s ease, transform 0.1s ease;
+      padding: 0;
+    }
+
+    .play-btn i {
+      margin-left: 3px;
+    }
+
+    .play-btn:hover {
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .track-list-container {
+      flex: 1.4;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .playlist-header-area {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0f0f0;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .playlist-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: inline-block;
+    }
+
+    .header-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-picker-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f1f3f9;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .color-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .color-picker-item input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      background: none;
+    }
+
+    .color-picker-item input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .color-picker-item input[type="color"]::-webkit-color-swatch {
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 50%;
+    }
+
+    .add-track-btn, .export-img-btn, .reset-btn {
+      background: #f0edff;
+      color: var(--primary-color);
+      border: 1px solid rgba(0,0,0,0.1);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .reset-btn {
+      background: #fff0f0;
+      color: #e53e3e;
+    }
+
+    .reset-btn:hover {
+      background: #e53e3e;
+      color: white;
+    }
+
+    .export-img-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+    }
+
+    .export-img-btn:hover {
+      opacity: 0.9;
+    }
+
+    .add-track-btn:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .track-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      list-style: none;
+    }
+
+    .track-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 16px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--card-inner-bg);
+      border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .track-item:hover {
+      filter: brightness(0.97);
+    }
+
+    .delete-track-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: #a0aec0;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+    }
+
+    .delete-track-btn:hover {
+      background: #ffe3e3;
+      color: #e53e3e;
+    }
+
+    .track-thumb-wrapper {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 14px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .track-thumb-placeholder {
+      font-size: 1.8rem;
+      color: rgba(255, 255, 255, 0.9);
+      pointer-events: none;
+    }
+
+    .track-thumb {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .track-thumb:not([src]), .track-thumb[src=""] {
+      display: none;
+    }
+
+    .track-thumb-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 2;
+    }
+
+    .track-thumb-wrapper:hover .track-thumb-overlay {
+      opacity: 1;
+    }
+
+    .track-opt-btn {
+      background: rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 80%;
+      text-align: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .track-opt-btn:hover {
+      background: white;
+      color: var(--primary-color);
+    }
+
+    .track-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+      padding-right: 20px;
+    }
+
+    .track-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .track-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .track-duration {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .track-artist {
+      font-size: 0.88rem;
+      color: var(--text-sub);
+    }
+
+    .track-keywords {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 1px;
+    }
+
+    .track-lyrics-preview {
+      font-size: 0.82rem;
+      color: #64748b;
+      margin-top: 4px;
+      line-height: 1.4;
+      font-style: italic;
+      white-space: pre-wrap;
+    }
+
+    .crop-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .crop-modal-overlay.active {
+      display: flex;
+    }
+
+    .crop-card {
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 20px;
+      max-width: 520px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .crop-card h3 {
+      font-size: 1.1rem;
+      color: var(--text-main);
+      margin-bottom: 16px;
+    }
+
+    .crop-container {
+      position: relative;
+      user-select: none;
+      overflow: hidden;
+      background: #1e1e24;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      touch-action: none;
+    }
+
+    .crop-target-img {
+      display: block;
+      max-width: 100%;
+      max-height: 380px;
+      pointer-events: none;
+    }
+
+    .crop-box {
+      position: absolute;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      cursor: move;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+
+    .crop-box::before, .crop-box::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+    }
+
+    .crop-box::before {
+      top: 50%; left: 0; width: 100%; height: 1px;
+      transform: translateY(-50%);
+    }
+
+    .crop-box::after {
+      left: 50%; top: 0; height: 100%; width: 1px;
+      transform: translateX(-50%);
+    }
+
+    .crop-handle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #ffffff;
+      border: 2px solid var(--primary-color);
+      border-radius: 50%;
+      z-index: 10;
+      touch-action: none;
+    }
+
+    .crop-handle.tl { top: -10px; left: -10px; cursor: nwse-resize; }
+    .crop-handle.tr { top: -10px; right: -10px; cursor: nesw-resize; }
+    .crop-handle.bl { bottom: -10px; left: -10px; cursor: nesw-resize; }
+    .crop-handle.br { bottom: -10px; right: -10px; cursor: nwse-resize; }
+
+    .crop-btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    .crop-btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .crop-btn.cancel {
+      background: #edf2f7;
+      color: #4a5568;
+    }
+
+    .crop-btn.cancel:hover { background: #e2e8f0; }
+
+    .crop-btn.confirm {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .crop-btn.confirm:hover { opacity: 0.9; }
+
+    /* 📱 모바일/iOS 저장 모달 스타일 */
+    .save-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .save-modal-overlay.active {
+      display: flex;
+    }
+
+    .save-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 20px;
+      max-width: 90%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .save-card p {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .save-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.1);
+      -webkit-touch-callout: default;
+    }
+
+    .save-close-btn {
+      margin-top: 15px;
+      padding: 8px 24px;
+      background: #edf2f7;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .is-exporting .add-track-btn,
+    .is-exporting .export-img-btn,
+    .is-exporting .reset-btn,
+    .is-exporting .delete-track-btn,
+    .is-exporting .color-picker-group {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 📸 상하좌우 배경 여백 생성을 위한 외부 래퍼 -->
+  <div class="capture-outer-wrapper" id="capture-wrapper">
+    <div class="playlist-container">
+      
+      <input type="file" id="main-art-input" accept="image/*" style="display: none;">
+      <input type="file" id="track-art-input" accept="image/*" style="display: none;">
+
+      <!-- [좌측] 메인 플레이어 -->
+      <div class="player-card">
+        <div class="album-art-wrapper">
+          <span class="placeholder-icon"></span>
+          <img id="main-art" class="album-art">
+          <div class="album-art-overlay">
+            <div class="art-opt-btn" onclick="triggerMainArtUpload()">📷 이미지 파일</div>
+            <div class="art-opt-btn" onclick="triggerMainYoutube()">🔗 유튜브 링크</div>
+          </div>
+        </div>
+        
+        <div class="song-info">
+          <h2 id="main-title" class="song-title" contenteditable="true">테마곡 제목 1</h2><br>
+          <p id="main-artist" class="artist-name" contenteditable="true">아티스트 1</p>
+        </div>
+
+        <div class="keywords-wrapper">
+          <span id="main-keywords" class="song-keywords" contenteditable="true">#키워드 #선정이유 #핵심파트 #포인트 등</span>
+        </div>
+
+        <div class="lyrics-wrapper">
+          <p id="main-lyrics" class="lyrics-text" contenteditable="true">곡 가사를 직접 입력하면 됩니다&#10;길어도 OK 그것이 뚱레이리스트니까...</p>
+        </div>
+
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="time-info">
+            <span id="main-current-time" class="time-editable" contenteditable="true">05:20</span>
+            <span id="main-duration" class="time-editable" contenteditable="true">06:21</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="control-btn"><i class="fa-solid fa-backward-step"></i></button>
+          <button class="control-btn play-btn"><i class="fa-solid fa-play"></i></button>
+          <button class="control-btn"><i class="fa-solid fa-forward-step"></i></button>
+        </div>
+      </div>
+
+      <!-- [우측] 트랙 리스트 -->
+      <div class="track-list-container">
+        <div class="playlist-header-area">
+          <h3 id="playlist-title" class="playlist-title" contenteditable="true">Character Theme Tracks</h3>
+          <div class="header-btn-group">
+            
+            <div class="color-picker-group">
+              <div class="color-picker-item" title="전체 배경 색상">
+                <input type="color" id="outerBgColorPicker" value="#f4f4f9">
+              </div>
+              <div class="color-picker-item" title="포인트 색상">
+                <input type="color" id="primaryColorPicker" value="#6c5ce7">
+              </div>
+              <div class="color-picker-item" title="카드 내부 배경 색상">
+                <input type="color" id="cardBgColorPicker" value="#fafafa">
+              </div>
+            </div>
+
+            <button class="reset-btn" onclick="resetData()">🔄 초기화</button>
+            <button class="add-track-btn" onclick="addTrack()">+ 새 트랙 추가</button>
+            <button class="export-img-btn" onclick="exportToImage()">📷 이미지로 저장</button>
+          </div>
+        </div>
+        
+        <ul class="track-list" id="track-list">
+          <!-- JS로 동적 생성 -->
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- [크롭 모달 레이어] -->
+  <div class="crop-modal-overlay" id="cropModal">
+    <div class="crop-card">
+      <h3>1:1 비율 크롭</h3>
+      <div class="crop-container" id="cropContainer">
+        <img id="cropTargetImg" class="crop-target-img" crossorigin="anonymous">
+        <div class="crop-box" id="cropBox">
+          <div class="crop-handle tl" data-handle="tl"></div>
+          <div class="crop-handle tr" data-handle="tr"></div>
+          <div class="crop-handle bl" data-handle="bl"></div>
+          <div class="crop-handle br" data-handle="br"></div>
+        </div>
+      </div>
+      <div class="crop-btn-group">
+        <button class="crop-btn cancel" onclick="closeCropModal()">취소</button>
+        <button class="crop-btn confirm" onclick="applyCrop()">적용하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [📱 모바일/iOS 저장 모달 레이어] -->
+  <div class="save-modal-overlay" id="saveModal">
+    <div class="save-card">
+      <p>👇 이미지를 꾹 눌러서 [사진에 저장]을 선택하세요!</p>
+      <img id="saveModalImg" src="" alt="저장용 이미지">
+      <button class="save-close-btn" onclick="closeSaveModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'custom_playlist_data';
+
+    const outerBgColorPicker = document.getElementById('outerBgColorPicker');
+    const primaryColorPicker = document.getElementById('primaryColorPicker');
+    const cardBgColorPicker = document.getElementById('cardBgColorPicker');
+
+    outerBgColorPicker.addEventListener('input', (e) => {
+      document.documentElement.style.setProperty('--outer-bg-color', e.target.value);
+      saveData();
     });
 
-    const dataUrl = canvas.toDataURL('image/png');
+    primaryColorPicker.addEventListener('input', (e) => {
+      document.documentElement.style.setProperty('--primary-color', e.target.value);
+      saveData();
+    });
 
-    // 💡 [추가] 우측 상단 텍스트(playlist-title) 값 읽기 및 파일명 결정 로직
-    const rawTitle = document.getElementById('playlist-title').innerText.trim();
-    
-    // 파일명으로 사용할 수 없는 특수문자(\ / : * ? " < > |) 제거
-    const safeTitle = rawTitle.replace(/[\\/:*?"<>|]/g, '').trim();
+    cardBgColorPicker.addEventListener('input', (e) => {
+      document.documentElement.style.setProperty('--card-inner-bg', e.target.value);
+      saveData();
+    });
 
-    let fileName = 'theme playlist.png'; // 기본 파일명
-
-    // 기본값이 아니거나 사용자가 텍스트를 입력했을 경우 해당 텍스트로 저장명 설정
-    if (safeTitle && safeTitle !== 'Character Theme Tracks') {
-      fileName = `${safeTitle}.png`;
+    function isMobileOrIOS() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     }
 
-    if (isMobileOrIOS()) {
-      const saveModal = document.getElementById('saveModal');
-      const saveModalImg = document.getElementById('saveModalImg');
-      saveModalImg.src = dataUrl;
-      saveModal.classList.add('active');
-    } else {
-      const link = document.createElement('a');
-      link.download = fileName; // 💡 동적으로 설정된 파일명 적용
-      link.href = dataUrl;
-      link.click();
+    function closeSaveModal() {
+      document.getElementById('saveModal').classList.remove('active');
     }
-  } catch (err) {
-    console.error('이미지 저장 중 오류가 발생했습니다:', err);
-    alert('이미지 저장에 실패했습니다.');
-  } finally {
-    wrapper.classList.remove('is-exporting');
-  }
-}
+
+    async function exportToImage() {
+      const wrapper = document.getElementById('capture-wrapper');
+
+      wrapper.classList.add('is-exporting');
+
+      try {
+        const currentOuterBg = getComputedStyle(document.documentElement).getPropertyValue('--outer-bg-color').trim();
+
+        const canvas = await html2canvas(wrapper, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: currentOuterBg || '#f4f4f9'
+        });
+
+        const dataUrl = canvas.toDataURL('image/png');
+
+        // 파일명 설정 로직
+        const playlistTitle = document.getElementById('playlist-title').innerText.trim();
+        let fileName = 'theme playlist.png';
+
+        if (playlistTitle && playlistTitle.toLowerCase() !== 'character theme tracks' && playlistTitle !== 'charater theme tracks') {
+          // 파일명으로 사용할 수 없는 특수문자 제거 (\ / : * ? " < > |)
+          const sanitizedTitle = playlistTitle.replace(/[\\/:*?"<>|]/g, '');
+          if (sanitizedTitle) {
+            fileName = `${sanitizedTitle}.png`;
+          }
+        }
+
+        if (isMobileOrIOS()) {
+          const saveModal = document.getElementById('saveModal');
+          const saveModalImg = document.getElementById('saveModalImg');
+          saveModalImg.src = dataUrl;
+          saveModal.classList.add('active');
+        } else {
+          const link = document.createElement('a');
+          link.download = fileName;
+          link.href = dataUrl;
+          link.click();
+        }
+      } catch (err) {
+        console.error('이미지 저장 중 오류가 발생했습니다:', err);
+        alert('이미지 저장에 실패했습니다.');
+      } finally {
+        wrapper.classList.remove('is-exporting');
+      }
+    }
+
+    function createTrackItemHTML(data = {}) {
+      const title = data.title || '새 테마곡';
+      const duration = data.duration || '03:30';
+      const artist = data.artist || '아티스트 명';
+      const keywords = data.keywords || '#키워드 #태그';
+      const lyrics = data.lyrics || '여기에 가사나 설명을 입력하세요.';
+      const currentTime = data.currentTime || '00:00';
+      const imgSrc = data.imgSrc || '';
+
+      const li = document.createElement('li');
+      li.className = 'track-item';
+      li.setAttribute('onclick', 'swapWithMain(this)');
+
+      li.innerHTML = `
+        <button class="delete-track-btn" onclick="deleteTrack(event, this)" title="트랙 삭제">🗑️</button>
+        <div class="track-thumb-wrapper">
+          <span class="track-thumb-placeholder"></span>
+          <img class="track-thumb" ${imgSrc ? `src="${imgSrc}"` : ''}>
+          <div class="track-thumb-overlay">
+            <div class="track-opt-btn" onclick="triggerTrackArtUpload(event, this)">📷 이미지</div>
+            <div class="track-opt-btn" onclick="triggerTrackYoutube(event, this)">🔗 유튜브</div>
+          </div>
+        </div>
+        <div class="track-details">
+          <div class="track-header">
+            <div class="track-title" contenteditable="true" onclick="preventSwap(event)">${title}</div>
+            <span class="track-duration" contenteditable="true" onclick="preventSwap(event)">${duration}</span>
+          </div>
+          <div class="track-artist" contenteditable="true" onclick="preventSwap(event)">${artist}</div>
+          <div class="track-keywords" contenteditable="true" onclick="preventSwap(event)">${keywords}</div>
+          <div class="track-lyrics-preview" contenteditable="true" onclick="preventSwap(event)">${lyrics}</div>
+          <div style="display:none;" class="track-curr" contenteditable="true">${currentTime}</div>
+        </div>
+      `;
+      return li;
+    }
+
+    function addTrack() {
+      const trackList = document.getElementById('track-list');
+      const newTrack = createTrackItemHTML();
+      trackList.appendChild(newTrack);
+      saveData();
+    }
+
+    function deleteTrack(event, btn) {
+      event.stopPropagation();
+      if (confirm('이 트랙을 삭제하시겠습니까?')) {
+        const item = btn.closest('.track-item');
+        item.remove();
+        saveData();
+      }
+    }
+
+    function saveData() {
+      const data = {
+        outerBgColor: outerBgColorPicker.value,
+        primaryColor: primaryColorPicker.value,
+        cardInnerBg: cardBgColorPicker.value,
+        playlistTitle: document.getElementById('playlist-title').innerText,
+        main: {
+          title: document.getElementById('main-title').innerText,
+          artist: document.getElementById('main-artist').innerText,
+          keywords: document.getElementById('main-keywords').innerText,
+          lyrics: document.getElementById('main-lyrics').innerText,
+          currentTime: document.getElementById('main-current-time').innerText,
+          duration: document.getElementById('main-duration').innerText,
+          imgSrc: document.getElementById('main-art').getAttribute('src') || ''
+        },
+        tracks: []
+      };
+
+      const trackItems = document.querySelectorAll('.track-item');
+      trackItems.forEach(item => {
+        data.tracks.push({
+          title: item.querySelector('.track-title').innerText,
+          duration: item.querySelector('.track-duration').innerText,
+          artist: item.querySelector('.track-artist').innerText,
+          keywords: item.querySelector('.track-keywords').innerText,
+          lyrics: item.querySelector('.track-lyrics-preview').innerText,
+          currentTime: item.querySelector('.track-curr') ? item.querySelector('.track-curr').innerText : '00:00',
+          imgSrc: item.querySelector('.track-thumb').getAttribute('src') || ''
+        });
+      });
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.warn('저장 실패 (용량 초과 가능성):', e);
+      }
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const trackList = document.getElementById('track-list');
+      trackList.innerHTML = '';
+
+      if (!saved) {
+        outerBgColorPicker.value = '#f4f4f9';
+        primaryColorPicker.value = '#6c5ce7';
+        cardBgColorPicker.value = '#fafafa';
+        document.documentElement.style.setProperty('--outer-bg-color', '#f4f4f9');
+        document.documentElement.style.setProperty('--primary-color', '#6c5ce7');
+        document.documentElement.style.setProperty('--card-inner-bg', '#fafafa');
+
+        document.getElementById('playlist-title').innerText = 'Character Theme Tracks';
+        document.getElementById('main-title').innerText = '테마곡 제목 1';
+        document.getElementById('main-artist').innerText = '아티스트 1';
+        document.getElementById('main-keywords').innerText = '#키워드 #선정이유 #핵심파트 #포인트 등';
+        document.getElementById('main-lyrics').innerText = '곡 가사를 직접 입력하면 됩니다\n길어도 OK 그것이 뚱레이리스트니까...';
+        document.getElementById('main-current-time').innerText = '05:20';
+        document.getElementById('main-duration').innerText = '06:21';
+        document.getElementById('main-art').removeAttribute('src');
+
+        const defaultTracks = [
+          { title: '테마곡 제목 2', duration: '09:07', artist: '아티스트 2', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '03:26' },
+          { title: '테마곡 제목 3', duration: '03:26', artist: '아티스트 3', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '박스 클릭 시 왼쪽으로 옮겨져\n더 편하게 편집 가능합니다', currentTime: '03:26' },
+          { title: '테마곡 제목 4', duration: '06:19', artist: '아티스트 4', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '유튜브 링크 삽입 시\n영상 썸네일이 자동으로 적용됩니다', currentTime: '03:23' },
+          { title: '테마곡 제목 5', duration: '06:03', artist: '아티스트 5', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '05:17' }
+        ];
+        defaultTracks.forEach(track => trackList.appendChild(createTrackItemHTML(track)));
+        updateProgressBar();
+        return;
+      }
+
+      try {
+        const data = JSON.parse(saved);
+
+        if (data.outerBgColor) {
+          outerBgColorPicker.value = data.outerBgColor;
+          document.documentElement.style.setProperty('--outer-bg-color', data.outerBgColor);
+        }
+        if (data.primaryColor) {
+          primaryColorPicker.value = data.primaryColor;
+          document.documentElement.style.setProperty('--primary-color', data.primaryColor);
+        }
+        if (data.cardInnerBg) {
+          cardBgColorPicker.value = data.cardInnerBg;
+          document.documentElement.style.setProperty('--card-inner-bg', data.cardInnerBg);
+        }
+
+        if (data.playlistTitle) {
+          document.getElementById('playlist-title').innerText = data.playlistTitle;
+        }
+
+        if (data.main) {
+          document.getElementById('main-title').innerText = data.main.title || '';
+          document.getElementById('main-artist').innerText = data.main.artist || '';
+          document.getElementById('main-keywords').innerText = data.main.keywords || '';
+          document.getElementById('main-lyrics').innerText = data.main.lyrics || '';
+          document.getElementById('main-current-time').innerText = data.main.currentTime || '00:00';
+          document.getElementById('main-duration').innerText = data.main.duration || '00:00';
+          
+          const mainArt = document.getElementById('main-art');
+          if (data.main.imgSrc) mainArt.setAttribute('src', data.main.imgSrc);
+          else mainArt.removeAttribute('src');
+        }
+
+        if (data.tracks && data.tracks.length > 0) {
+          data.tracks.forEach(track => {
+            trackList.appendChild(createTrackItemHTML(track));
+          });
+        }
+      } catch (e) {
+        console.error('데이터 불러오기 오류:', e);
+      }
+    }
+
+    function resetData() {
+      if (confirm('모든 내용을 초기화하고 처음 상태로 되돌리시겠습니까? 작성 중인 내용이 지워집니다.')) {
+        localStorage.removeItem(STORAGE_KEY);
+        loadData();
+      }
+    }
+
+    document.addEventListener('input', function(e) {
+      if (e.target && e.target.isContentEditable) {
+        saveData();
+      }
+    });
+
+    document.addEventListener('paste', function(e) {
+      if (e.target && e.target.isContentEditable) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+      }
+    });
+
+    let activeTargetImg = null;
+    let activeTrackThumbImg = null;
+
+    let boxX = 0, boxY = 0, boxSize = 100;
+    let isDragging = false;
+    let isResizing = false;
+    let activeHandle = null;
+    let startX = 0, startY = 0;
+    let startBoxX = 0, startBoxY = 0, startBoxSize = 0;
+
+    const cropModal = document.getElementById('cropModal');
+    const cropContainer = document.getElementById('cropContainer');
+    const cropTargetImg = document.getElementById('cropTargetImg');
+    const cropBox = document.getElementById('cropBox');
+
+    function extractYoutubeId(url) {
+      if (!url) return null;
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function openCropModal(imageSrc, targetImgElement) {
+      activeTargetImg = targetImgElement;
+      cropTargetImg.src = imageSrc;
+
+      cropModal.classList.add('active');
+
+      cropTargetImg.onload = function() {
+        const imgW = cropTargetImg.clientWidth;
+        const imgH = cropTargetImg.clientHeight;
+
+        boxSize = Math.min(imgW, imgH) * 0.8;
+        boxX = (imgW - boxSize) / 2;
+        boxY = (imgH - boxSize) / 2;
+        
+        updateCropBoxUI();
+      };
+    }
+
+    function closeCropModal() {
+      cropModal.classList.remove('active');
+      activeTargetImg = null;
+    }
+
+    function updateCropBoxUI() {
+      cropBox.style.left = boxX + 'px';
+      cropBox.style.top = boxY + 'px';
+      cropBox.style.width = boxSize + 'px';
+      cropBox.style.height = boxSize + 'px';
+    }
+
+    function handleDragStart(e) {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      if (e.target.classList.contains('crop-handle')) {
+        isResizing = true;
+        activeHandle = e.target.dataset.handle;
+      } else {
+        isDragging = true;
+      }
+
+      startX = clientX;
+      startY = clientY;
+      startBoxX = boxX;
+      startBoxY = boxY;
+      startBoxSize = boxSize;
+
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    cropBox.addEventListener('mousedown', handleDragStart);
+    cropBox.addEventListener('touchstart', handleDragStart, { passive: false });
+
+    function handleDragMove(e) {
+      if (!isDragging && !isResizing) return;
+
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const deltaX = clientX - startX;
+      const deltaY = clientY - startY;
+
+      const imgW = cropTargetImg.clientWidth;
+      const imgH = cropTargetImg.clientHeight;
+
+      if (isDragging) {
+        let newX = startBoxX + deltaX;
+        let newY = startBoxY + deltaY;
+
+        newX = Math.max(0, Math.min(imgW - boxSize, newX));
+        newY = Math.max(0, Math.min(imgH - boxSize, newY));
+
+        boxX = newX;
+        boxY = newY;
+      } else if (isResizing) {
+        let sizeChange = 0;
+
+        if (activeHandle === 'br') {
+          sizeChange = Math.max(deltaX, deltaY);
+          let newSize = Math.max(40, Math.min(imgW - startBoxX, imgH - startBoxY, startBoxSize + sizeChange));
+          boxSize = newSize;
+        } else if (activeHandle === 'tl') {
+          sizeChange = Math.max(-deltaX, -deltaY);
+          let newSize = Math.max(40, Math.min(startBoxX + startBoxSize, startBoxY + startBoxSize, startBoxSize + sizeChange));
+          boxX = startBoxX - (newSize - startBoxSize);
+          boxY = startBoxY - (newSize - startBoxSize);
+          boxSize = newSize;
+        } else if (activeHandle === 'tr') {
+          sizeChange = Math.max(deltaX, -deltaY);
+          let newSize = Math.max(40, Math.min(imgW - startBoxX, startBoxY + startBoxSize, startBoxSize + sizeChange));
+          boxY = startBoxY - (newSize - startBoxSize);
+          boxSize = newSize;
+        } else if (activeHandle === 'bl') {
+          sizeChange = Math.max(-deltaX, deltaY);
+          let newSize = Math.max(40, Math.min(startBoxX + startBoxSize, imgH - startBoxY, startBoxSize + sizeChange));
+          boxX = startBoxX - (newSize - startBoxSize);
+          boxY = startBoxY - (newSize - startBoxSize);
+          boxSize = newSize;
+        }
+      }
+
+      updateCropBoxUI();
+
+      if (e.cancelable) e.preventDefault();
+    }
+
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('touchmove', handleDragMove, { passive: false });
+
+    function handleDragEnd() {
+      isDragging = false;
+      isResizing = false;
+      activeHandle = null;
+    }
+
+    window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('touchend', handleDragEnd);
+
+    function applyCrop() {
+      if (!activeTargetImg) return;
+
+      const scaleX = cropTargetImg.naturalWidth / cropTargetImg.clientWidth;
+      const scaleY = cropTargetImg.naturalHeight / cropTargetImg.clientHeight;
+
+      const cropX = boxX * scaleX;
+      const cropY = boxY * scaleY;
+      const cropW = boxSize * scaleX;
+      const cropH = boxSize * scaleY;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 500;
+      canvas.height = 500;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(
+        cropTargetImg,
+        cropX, cropY, cropW, cropH,
+        0, 0, 500, 500
+      );
+
+      activeTargetImg.src = canvas.toDataURL('image/jpeg', 0.92);
+      closeCropModal();
+      saveData();
+    }
+
+    function fetchYoutubeAndCrop(videoId, targetImg) {
+      const maxResUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      const hqResUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+      const tempImg = new Image();
+      tempImg.crossOrigin = 'anonymous';
+      tempImg.onload = function() {
+        if (tempImg.width === 120) {
+          openCropModal(hqResUrl, targetImg);
+        } else {
+          openCropModal(maxResUrl, targetImg);
+        }
+      };
+      tempImg.onerror = function() {
+        openCropModal(hqResUrl, targetImg);
+      };
+      tempImg.src = maxResUrl;
+    }
+
+    function parseTimeToSeconds(timeStr) {
+      const parts = timeStr.trim().split(':');
+      if (parts.length === 2) {
+        const min = parseInt(parts[0], 10) || 0;
+        const sec = parseInt(parts[1], 10) || 0;
+        return min * 60 + sec;
+      }
+      return 0;
+    }
+
+    function updateProgressBar() {
+      const currentStr = document.getElementById('main-current-time').innerText;
+      const durationStr = document.getElementById('main-duration').innerText;
+
+      const currentSec = parseTimeToSeconds(currentStr);
+      const durationSec = parseTimeToSeconds(durationStr);
+
+      let percentage = 0;
+      if (durationSec > 0) {
+        percentage = Math.min(Math.max((currentSec / durationSec) * 100, 0), 100);
+      }
+
+      document.getElementById('progress-fill').style.width = percentage + '%';
+    }
+
+    document.getElementById('main-current-time').addEventListener('input', updateProgressBar);
+    document.getElementById('main-duration').addEventListener('input', updateProgressBar);
+
+    function preventSwap(event) {
+      event.stopPropagation();
+    }
+
+    function swapWithMain(trackItem) {
+      const mainArtEl = document.getElementById('main-art');
+      const mainData = {
+        title: document.getElementById('main-title').innerText,
+        artist: document.getElementById('main-artist').innerText,
+        keywords: document.getElementById('main-keywords').innerText,
+        lyrics: document.getElementById('main-lyrics').innerText,
+        currentTime: document.getElementById('main-current-time').innerText,
+        duration: document.getElementById('main-duration').innerText,
+        imgSrc: mainArtEl.getAttribute('src') || ''
+      };
+
+      const trackTitleEl = trackItem.querySelector('.track-title');
+      const trackArtistEl = trackItem.querySelector('.track-artist');
+      const trackKeywordsEl = trackItem.querySelector('.track-keywords');
+      const trackLyricsEl = trackItem.querySelector('.track-lyrics-preview');
+      const trackCurrEl = trackItem.querySelector('.track-curr');
+      const trackDurationEl = trackItem.querySelector('.track-duration');
+      const trackImgEl = trackItem.querySelector('.track-thumb');
+
+      const trackData = {
+        title: trackTitleEl.innerText,
+        artist: trackArtistEl.innerText,
+        keywords: trackKeywordsEl.innerText,
+        lyrics: trackLyricsEl.innerText,
+        currentTime: trackCurrEl ? trackCurrEl.innerText : '00:00',
+        duration: trackDurationEl.innerText,
+        imgSrc: trackImgEl.getAttribute('src') || ''
+      };
+
+      document.getElementById('main-title').innerText = trackData.title;
+      document.getElementById('main-artist').innerText = trackData.artist;
+      document.getElementById('main-keywords').innerText = trackData.keywords;
+      document.getElementById('main-lyrics').innerText = trackData.lyrics;
+      document.getElementById('main-current-time').innerText = trackData.currentTime;
+      document.getElementById('main-duration').innerText = trackData.duration;
+      if (trackData.imgSrc) mainArtEl.setAttribute('src', trackData.imgSrc);
+      else mainArtEl.removeAttribute('src');
+
+      trackTitleEl.innerText = mainData.title;
+      trackArtistEl.innerText = mainData.artist;
+      trackKeywordsEl.innerText = mainData.keywords;
+      trackLyricsEl.innerText = mainData.lyrics;
+      if (trackCurrEl) trackCurrEl.innerText = mainData.currentTime;
+      trackDurationEl.innerText = mainData.duration;
+      if (mainData.imgSrc) trackImgEl.setAttribute('src', mainData.imgSrc);
+      else trackImgEl.removeAttribute('src');
+
+      updateProgressBar();
+      saveData();
+    }
+
+    function triggerMainArtUpload() {
+      activeTargetImg = document.getElementById('main-art');
+      document.getElementById('main-art-input').click();
+    }
+
+    function triggerMainYoutube() {
+      const url = prompt('유튜브 영상 URL을 입력하세요:');
+      if (url) {
+        const videoId = extractYoutubeId(url);
+        if (videoId) {
+          fetchYoutubeAndCrop(videoId, document.getElementById('main-art'));
+        } else {
+          alert('올바른 유튜브 링크 URL이 아닙니다.');
+        }
+      }
+    }
+
+    document.getElementById('main-art-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          openCropModal(event.target.result, document.getElementById('main-art'));
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function triggerTrackArtUpload(event, btnElement) {
+      event.stopPropagation();
+      const wrapper = btnElement.closest('.track-thumb-wrapper');
+      activeTrackThumbImg = wrapper.querySelector('.track-thumb');
+      document.getElementById('track-art-input').click();
+    }
+
+    function triggerTrackYoutube(event, btnElement) {
+      event.stopPropagation();
+      const wrapper = btnElement.closest('.track-thumb-wrapper');
+      const thumbImg = wrapper.querySelector('.track-thumb');
+      
+      const url = prompt('유튜브 영상 URL을 입력하세요:');
+      if (url) {
+        const videoId = extractYoutubeId(url);
+        if (videoId) {
+          fetchYoutubeAndCrop(videoId, thumbImg);
+        } else {
+          alert('올바른 유튜브 링크 URL이 아닙니다.');
+        }
+      }
+    }
+
+    document.getElementById('track-art-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file && activeTrackThumbImg) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          openCropModal(event.target.result, activeTrackThumbImg);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    loadData();
+    updateProgressBar();
+  </script>
+</body>
+</html>
