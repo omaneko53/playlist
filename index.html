@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <!-- 🎨 Font Awesome (기기 차이 없는 깔끔한 아이콘 라이브러리) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <!-- 📸 이미지 저장(캡처)을 위한 html2canvas 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -273,10 +276,13 @@
     .control-btn {
       background: none;
       border: none;
-      font-size: 1.25rem;
+      font-size: 1rem;
       color: var(--text-main);
       cursor: pointer;
       transition: transform 0.1s ease, color 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .control-btn:hover {
@@ -293,9 +299,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
+      padding-left: 3px; /* 재생 버튼 중앙 정렬 시각적 보정 */
     }
 
     .play-btn:hover {
@@ -774,7 +781,7 @@
       <!-- [좌측] 메인 플레이어 -->
       <div class="player-card">
         <div class="album-art-wrapper">
-          <span class="placeholder-icon">🎵</span>
+          <span class="placeholder-icon"></span>
           <img id="main-art" class="album-art">
           <div class="album-art-overlay">
             <div class="art-opt-btn" onclick="triggerMainArtUpload()">📷 이미지 파일</div>
@@ -805,10 +812,11 @@
           </div>
         </div>
 
+        <!-- 🎵 폰트 아이콘 적용 부분 (iOS 이모티콘 변환 방지) -->
         <div class="controls">
-          <button class="control-btn">⏮</button>
-          <button class="control-btn play-btn">▶</button>
-          <button class="control-btn">⏭</button>
+          <button class="control-btn"><i class="fa-solid fa-backward-step"></i></button>
+          <button class="control-btn play-btn"><i class="fa-solid fa-play"></i></button>
+          <button class="control-btn"><i class="fa-solid fa-forward-step"></i></button>
         </div>
       </div>
 
@@ -821,13 +829,13 @@
             <!-- 🎨 색상 사용자 커스텀 피커 (전체 배경 추가) -->
             <div class="color-picker-group">
               <div class="color-picker-item" title="전체 배경 색상">
-                🖼️ <input type="color" id="outerBgColorPicker" value="#f4f4f9">
+                <input type="color" id="outerBgColorPicker" value="#f4f4f9">
               </div>
               <div class="color-picker-item" title="포인트 색상">
-                🎨 <input type="color" id="primaryColorPicker" value="#6c5ce7">
+                <input type="color" id="primaryColorPicker" value="#6c5ce7">
               </div>
               <div class="color-picker-item" title="카드 내부 배경 색상">
-                🃏 <input type="color" id="cardBgColorPicker" value="#fafafa">
+                <input type="color" id="cardBgColorPicker" value="#fafafa">
               </div>
             </div>
 
@@ -963,7 +971,7 @@
       li.innerHTML = `
         <button class="delete-track-btn" onclick="deleteTrack(event, this)" title="트랙 삭제">🗑️</button>
         <div class="track-thumb-wrapper">
-          <span class="track-thumb-placeholder">🎶</span>
+          <span class="track-thumb-placeholder"></span>
           <img class="track-thumb" ${imgSrc ? `src="${imgSrc}"` : ''}>
           <div class="track-thumb-overlay">
             <div class="track-opt-btn" onclick="triggerTrackArtUpload(event, this)">📷 이미지</div>
@@ -1226,6 +1234,7 @@
           sizeChange = Math.max(-deltaX, deltaY);
           let newSize = Math.max(40, Math.min(startBoxX + startBoxSize, imgH - startBoxY, startBoxSize + sizeChange));
           boxX = startBoxX - (newSize - startBoxSize);
+          boxY = startBoxY - (newSize - startBoxSize);
           boxSize = newSize;
         }
       }
