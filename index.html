@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>캐릭터 테마 플레이리스트 - 커스텀 에디터</title>
+  <title>캐릭터 테마 플레이리스트</title>
 
   <!-- ✨ 구글 폰트 로드 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -302,7 +302,7 @@
       font-size: 1.15rem;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
-      padding-left: 3px; /* 재생 버튼 중앙 정렬 시각적 보정 */
+      padding-left: 3px;
     }
 
     .play-btn:hover {
@@ -340,7 +340,6 @@
       gap: 12px;
     }
 
-    /* 🎨 색상 선택 그룹 피커 스타일 */
     .color-picker-group {
       display: flex;
       align-items: center;
@@ -616,6 +615,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      touch-action: none; /* 📱 터치 드래그 시 모바일 스크롤 방지 */
     }
 
     .crop-target-img {
@@ -631,6 +631,7 @@
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
       cursor: move;
       box-sizing: border-box;
+      touch-action: none; /* 📱 모바일 스크롤 방지 */
     }
 
     .crop-box::before, .crop-box::after {
@@ -652,18 +653,19 @@
 
     .crop-handle {
       position: absolute;
-      width: 12px;
-      height: 12px;
+      width: 20px; /* 📱 모바일 터치가 편하도록 조절점 확대 */
+      height: 20px;
       background: #ffffff;
       border: 2px solid var(--primary-color);
       border-radius: 50%;
       z-index: 10;
+      touch-action: none;
     }
 
-    .crop-handle.tl { top: -6px; left: -6px; cursor: nwse-resize; }
-    .crop-handle.tr { top: -6px; right: -6px; cursor: nesw-resize; }
-    .crop-handle.bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
-    .crop-handle.br { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    .crop-handle.tl { top: -10px; left: -10px; cursor: nwse-resize; }
+    .crop-handle.tr { top: -10px; right: -10px; cursor: nesw-resize; }
+    .crop-handle.bl { bottom: -10px; left: -10px; cursor: nesw-resize; }
+    .crop-handle.br { bottom: -10px; right: -10px; cursor: nwse-resize; }
 
     .crop-btn-group {
       display: flex;
@@ -738,7 +740,7 @@
       height: auto;
       border-radius: 12px;
       border: 1px solid rgba(0,0,0,0.1);
-      -webkit-touch-callout: default; /* iOS에서 이미지 길게 누르기 허용 */
+      -webkit-touch-callout: default;
     }
 
     .save-close-btn {
@@ -751,7 +753,6 @@
       cursor: pointer;
     }
 
-    /* 이미지 저장 중일 때 버튼 및 설정 UI 숨기기 */
     .is-exporting .add-track-btn,
     .is-exporting .export-img-btn,
     .is-exporting .delete-track-btn,
@@ -795,11 +796,11 @@
         </div>
 
         <div class="keywords-wrapper">
-          <span id="main-keywords" class="song-keywords" contenteditable="true">#운명 #고독 #어둠속의_빛</span>
+          <span id="main-keywords" class="song-keywords" contenteditable="true">#키워드 #선정이유 #핵심파트 #포인트 등</span>
         </div>
 
         <div class="lyrics-wrapper">
-          <p id="main-lyrics" class="lyrics-text" contenteditable="true">칠흑 같은 밤하늘 아래 홀로 선 너에게&#10;작은 별빛이 되어 길을 비춰줄게</p>
+          <p id="main-lyrics" class="lyrics-text" contenteditable="true">곡 가사를 직접 입력하면 됩니다&#10;길어도 OK 그것이 뚱레이리스트니까...</p>
         </div>
 
         <div class="progress-container">
@@ -807,12 +808,11 @@
             <div class="progress-fill" id="progress-fill"></div>
           </div>
           <div class="time-info">
-            <span id="main-current-time" class="time-editable" contenteditable="true">01:24</span>
-            <span id="main-duration" class="time-editable" contenteditable="true">03:45</span>
+            <span id="main-current-time" class="time-editable" contenteditable="true">05:20</span>
+            <span id="main-duration" class="time-editable" contenteditable="true">06:21</span>
           </div>
         </div>
 
-        <!-- 🎵 폰트 아이콘 적용 부분 (iOS 이모티콘 변환 방지) -->
         <div class="controls">
           <button class="control-btn"><i class="fa-solid fa-backward-step"></i></button>
           <button class="control-btn play-btn"><i class="fa-solid fa-play"></i></button>
@@ -826,7 +826,6 @@
           <h3 id="playlist-title" class="playlist-title" contenteditable="true">Character Theme Tracks</h3>
           <div class="header-btn-group">
             
-            <!-- 🎨 색상 사용자 커스텀 피커 (전체 배경 추가) -->
             <div class="color-picker-group">
               <div class="color-picker-item" title="전체 배경 색상">
                 <input type="color" id="outerBgColorPicker" value="#f4f4f9">
@@ -845,7 +844,7 @@
         </div>
         
         <ul class="track-list" id="track-list">
-          <!-- JS로 동적 생성 및 기본값 제공 -->
+          <!-- JS로 동적 생성 -->
         </ul>
       </div>
 
@@ -884,7 +883,6 @@
   <script>
     const STORAGE_KEY = 'custom_playlist_data';
 
-    // 🎨 커스텀 색상 피커 이벤트 핸들러
     const outerBgColorPicker = document.getElementById('outerBgColorPicker');
     const primaryColorPicker = document.getElementById('primaryColorPicker');
     const cardBgColorPicker = document.getElementById('cardBgColorPicker');
@@ -904,7 +902,6 @@
       saveData();
     });
 
-    // 📱 iOS 기기 판별 함수
     function isIOS() {
       return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -914,32 +911,28 @@
       document.getElementById('saveModal').classList.remove('active');
     }
 
-    // 📸 여백 추가 및 트랙 추가/삭제 버튼을 제거하여 사진 저장하는 함수
     async function exportToImage() {
       const wrapper = document.getElementById('capture-wrapper');
 
-      // 저장 시 버튼 및 색상 선택 UI 숨김
       wrapper.classList.add('is-exporting');
 
       try {
         const currentOuterBg = getComputedStyle(document.documentElement).getPropertyValue('--outer-bg-color').trim();
 
         const canvas = await html2canvas(wrapper, {
-          scale: 2, // 高해상도 화질
+          scale: 2,
           useCORS: true,
-          backgroundColor: currentOuterBg || '#f4f4f9' // 지정한 배경색을 결과 이미지 여백에 반영
+          backgroundColor: currentOuterBg || '#f4f4f9'
         });
 
         const dataUrl = canvas.toDataURL('image/png');
 
         if (isIOS()) {
-          // iOS 환경일 경우 모달 창을 통해 꾹 눌러 저장 유도
           const saveModal = document.getElementById('saveModal');
           const saveModalImg = document.getElementById('saveModalImg');
           saveModalImg.src = dataUrl;
           saveModal.classList.add('active');
         } else {
-          // 일반 PC / Android 환경에서는 자동 다운로드 진행
           const link = document.createElement('a');
           link.download = 'playlist_theme.png';
           link.href = dataUrl;
@@ -949,12 +942,10 @@
         console.error('이미지 저장 중 오류가 발생했습니다:', err);
         alert('이미지 저장에 실패했습니다.');
       } finally {
-        // 숨긴 UI 복원
         wrapper.classList.remove('is-exporting');
       }
     }
 
-    // ✨ 기본 트랙 HTML 생성 함수
     function createTrackItemHTML(data = {}) {
       const title = data.title || '새 테마곡';
       const duration = data.duration || '03:30';
@@ -992,7 +983,6 @@
       return li;
     }
 
-    // ✨ 새 트랙 추가 함수
     function addTrack() {
       const trackList = document.getElementById('track-list');
       const newTrack = createTrackItemHTML();
@@ -1000,7 +990,6 @@
       saveData();
     }
 
-    // ✨ 트랙 삭제 함수
     function deleteTrack(event, btn) {
       event.stopPropagation();
       if (confirm('이 트랙을 삭제하시겠습니까?')) {
@@ -1010,7 +999,6 @@
       }
     }
 
-    // 💾 저장 및 불러오기 (전체 배경색 포함)
     function saveData() {
       const data = {
         outerBgColor: outerBgColorPicker.value,
@@ -1055,12 +1043,11 @@
       trackList.innerHTML = '';
 
       if (!saved) {
-        // 기본 초기 데이터
         const defaultTracks = [
-          { title: '테마곡 제목 2', duration: '04:10', artist: '아티스트 2', keywords: '#희망 #첫만남 #새로운_시작', lyrics: '바람이 머무는 언덕 위에서\n다시 만날 날을 기약하며', currentTime: '00:45' },
-          { title: '테마곡 제목 3', duration: '02:55', artist: '아티스트 3', keywords: '#질주 #전투 #불꽃', lyrics: '붉게 타오르는 붉은 태양처럼\n한계 따위는 뒤로 하고 덤벼들어', currentTime: '02:10' },
-          { title: '테마곡 제목 4', duration: '03:30', artist: '아티스트 4', keywords: '#아련함 #회상 #눈물', lyrics: '지워지지 않는 네 미소가\n오늘따라 유난히 그립다', currentTime: '01:15' },
-          { title: '테마곡 제목 5', duration: '04:15', artist: '아티스트 5', keywords: '#여운 #마지막 #약속', lyrics: '긴 여행의 끝에서 노래하는\n우리들의 소중했던 이야기', currentTime: '00:10' }
+          { title: '테마곡 제목 2', duration: '09:07', artist: '아티스트 2', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '03:26' },
+          { title: '테마곡 제목 3', duration: '03:26', artist: '아티스트 3', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '박스 클릭 시 왼쪽으로 옮겨져\n더 편하게 편집 가능합니다', currentTime: '03:26' },
+          { title: '테마곡 제목 4', duration: '06:19', artist: '아티스트 4', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '유튜브 링크 삽입 시\n영상 썸네일이 자동으로 적용됩니다', currentTime: '03:23' },
+          { title: '테마곡 제목 5', duration: '06:03', artist: '아티스트 5', keywords: '#키워드 #선정이유 #핵심파트 #포인트 등', lyrics: '가사 입력 가사 입력 가사 입력 가사 입력\n가사 입력 가사 입력 가사 입력 가사 입력', currentTime: '05:17' }
         ];
         defaultTracks.forEach(track => trackList.appendChild(createTrackItemHTML(track)));
         return;
@@ -1069,7 +1056,6 @@
       try {
         const data = JSON.parse(saved);
 
-        // 색상 적용
         if (data.outerBgColor) {
           outerBgColorPicker.value = data.outerBgColor;
           document.documentElement.style.setProperty('--outer-bg-color', data.outerBgColor);
@@ -1176,7 +1162,11 @@
       cropBox.style.height = boxSize + 'px';
     }
 
-    cropBox.addEventListener('mousedown', function(e) {
+    // 📱 마우스와 터치 이벤트를 통합 처리하는 공통 함수
+    function handleDragStart(e) {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
       if (e.target.classList.contains('crop-handle')) {
         isResizing = true;
         activeHandle = e.target.dataset.handle;
@@ -1184,21 +1174,27 @@
         isDragging = true;
       }
 
-      startX = e.clientX;
-      startY = e.clientY;
+      startX = clientX;
+      startY = clientY;
       startBoxX = boxX;
       startBoxY = boxY;
       startBoxSize = boxSize;
 
       e.preventDefault();
       e.stopPropagation();
-    });
+    }
 
-    window.addEventListener('mousemove', function(e) {
+    cropBox.addEventListener('mousedown', handleDragStart);
+    cropBox.addEventListener('touchstart', handleDragStart, { passive: false });
+
+    function handleDragMove(e) {
       if (!isDragging && !isResizing) return;
 
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      const deltaX = clientX - startX;
+      const deltaY = clientY - startY;
 
       const imgW = cropTargetImg.clientWidth;
       const imgH = cropTargetImg.clientHeight;
@@ -1240,13 +1236,21 @@
       }
 
       updateCropBoxUI();
-    });
 
-    window.addEventListener('mouseup', function() {
+      if (e.cancelable) e.preventDefault();
+    }
+
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('touchmove', handleDragMove, { passive: false });
+
+    function handleDragEnd() {
       isDragging = false;
       isResizing = false;
       activeHandle = null;
-    });
+    }
+
+    window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('touchend', handleDragEnd);
 
     function applyCrop() {
       if (!activeTargetImg) return;
