@@ -55,7 +55,6 @@
       display: inline-block;
       width: 1200px; /* PC 전용 규격으로 너비 고정 */
       transition: background-color 0.3s ease;
-      box-sizing: border-box;
     }
 
     .playlist-container {
@@ -66,7 +65,6 @@
       border-radius: var(--border-radius);
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
       width: 100%;
-      box-sizing: border-box;
     }
 
     [contenteditable="true"] {
@@ -104,7 +102,6 @@
       border-radius: var(--border-radius);
       border: 1px solid rgba(0, 0, 0, 0.05);
       transition: background-color 0.3s ease;
-      position: relative;
     }
 
     .album-art-wrapper {
@@ -272,15 +269,11 @@
       text-align: center;
     }
 
-    /* 📌 컨트롤 영역 고정 스타일 보완 (모바일 쏠림 방지) */
     .controls {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 22px;
-      width: 100%;
-      margin: 0 auto;
-      flex-shrink: 0;
     }
 
     .control-btn {
@@ -294,17 +287,13 @@
       justify-content: center;
       align-items: center;
       line-height: 1;
-      flex-shrink: 0;
     }
 
     .control-btn i {
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
-      width: 1em;
-      height: 1em;
-      text-align: center;
     }
 
     .control-btn:hover {
@@ -325,7 +314,6 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
       padding: 0;
-      flex-shrink: 0;
     }
 
     .play-btn i {
@@ -884,7 +872,7 @@
   <!-- [크롭 모달 레이어] -->
   <div class="crop-modal-overlay" id="cropModal">
     <div class="crop-card">
-      <h3>1:1 비율 크롭</h3>
+      <h3>1:1 비율 구도 크롭</h3>
       <div class="crop-container" id="cropContainer">
         <img id="cropTargetImg" class="crop-target-img" crossorigin="anonymous">
         <div class="crop-box" id="cropBox">
@@ -944,11 +932,6 @@
     async function exportToImage() {
       const wrapper = document.getElementById('capture-wrapper');
 
-      // 캡처 전 모바일 환경 뷰포트 오차 보정
-      const originalScrollX = window.scrollX;
-      const originalScrollY = window.scrollY;
-      window.scrollTo(0, 0);
-
       wrapper.classList.add('is-exporting');
 
       try {
@@ -957,25 +940,10 @@
         const canvas = await html2canvas(wrapper, {
           scale: 2,
           useCORS: true,
-          backgroundColor: currentOuterBg || '#f4f4f9',
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: 1280
+          backgroundColor: currentOuterBg || '#f4f4f9'
         });
 
         const dataUrl = canvas.toDataURL('image/png');
-
-        // 파일명 설정 로직
-        const playlistTitle = document.getElementById('playlist-title').innerText.trim();
-        let fileName = 'theme playlist.png';
-
-        if (playlistTitle && playlistTitle.toLowerCase() !== 'character theme tracks' && playlistTitle !== 'charater theme tracks') {
-          // 파일명으로 사용할 수 없는 특수문자 제거 (\ / : * ? " < > |)
-          const sanitizedTitle = playlistTitle.replace(/[\\/:*?"<>|]/g, '');
-          if (sanitizedTitle) {
-            fileName = `${sanitizedTitle}.png`;
-          }
-        }
 
         if (isMobileOrIOS()) {
           const saveModal = document.getElementById('saveModal');
@@ -984,7 +952,7 @@
           saveModal.classList.add('active');
         } else {
           const link = document.createElement('a');
-          link.download = fileName;
+          link.download = 'playlist_theme.png';
           link.href = dataUrl;
           link.click();
         }
@@ -993,7 +961,6 @@
         alert('이미지 저장에 실패했습니다.');
       } finally {
         wrapper.classList.remove('is-exporting');
-        window.scrollTo(originalScrollX, originalScrollY);
       }
     }
 
