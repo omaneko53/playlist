@@ -269,6 +269,7 @@
       text-align: center;
     }
 
+    /* 🛠️ 모바일/iOS 캡처 시 플레이버튼 아이콘 쏠림 방지 CSS 수정 */
     .controls {
       display: flex;
       align-items: center;
@@ -283,17 +284,22 @@
       color: var(--text-main);
       cursor: pointer;
       transition: transform 0.1s ease, color 0.2s ease;
-      display: inline-flex;
+      display: flex;
       justify-content: center;
       align-items: center;
+      width: 32px;
+      height: 32px;
       line-height: 1;
+      padding: 0;
     }
 
     .control-btn i {
       display: flex;
       align-items: center;
       justify-content: center;
-      line-height: 1;
+      width: 1em;
+      height: 1em;
+      line-height: 1em;
     }
 
     .control-btn:hover {
@@ -307,17 +313,18 @@
       border-radius: 50%;
       background: var(--primary-color);
       color: white;
-      display: inline-flex;
+      display: flex;
       justify-content: center;
       align-items: center;
       font-size: 1.15rem;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
       padding: 0;
+      position: relative;
     }
 
     .play-btn i {
-      margin-left: 3px;
+      transform: translateX(1.5px); /* iOS/html2canvas 정렬 안정성 보장 */
     }
 
     .play-btn:hover {
@@ -937,9 +944,11 @@
       try {
         const currentOuterBg = getComputedStyle(document.documentElement).getPropertyValue('--outer-bg-color').trim();
 
+        /* 🛠️ iOS/웹킷 폰트 아이콘 수직 미스매치 방지용 html2canvas 옵션 강화 */
         const canvas = await html2canvas(wrapper, {
           scale: 2,
           useCORS: true,
+          foreignObjectRendering: false,
           backgroundColor: currentOuterBg || '#f4f4f9'
         });
 
