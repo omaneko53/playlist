@@ -946,8 +946,10 @@
 
         const dataUrl = canvas.toDataURL('image/png');
 
-        // 파일명 고정 (플레이리스트 제목 개입 없이 고정된 파일명 사용)
-        const fileName = 'theme playlist.png';
+        // 사용자가 적은 플레이리스트 제목 텍스트를 파일명으로 가져오기 (없거나 공백이면 'theme playlist' 적용)
+        const rawTitle = document.getElementById('playlist-title').innerText.trim();
+        const safeTitle = rawTitle ? rawTitle.replace(/[\/\\?%*:|"<>]/g, '') : 'theme playlist';
+        const fileName = `${safeTitle}.png`;
 
         if (isMobileOrIOS()) {
           const saveModal = document.getElementById('saveModal');
