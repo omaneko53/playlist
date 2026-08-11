@@ -11,9 +11,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <!-- 🎨 Font Awesome 아이콘 라이브러리 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
   <!-- 📸 이미지 저장(캡처)을 위한 html2canvas 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -269,37 +266,35 @@
       text-align: center;
     }
 
-    /* 🛠️ 모바일/iOS 캡처 시 플레이버튼 아이콘 쏠림 방지 CSS 수정 */
+    /* 🛠️ [수정] 컨트롤 버튼 & SVG 아이콘 고정 정렬 */
     .controls {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 22px;
+      width: 100%;
     }
 
     .control-btn {
       background: none;
       border: none;
-      font-size: 1rem;
       color: var(--text-main);
       cursor: pointer;
       transition: transform 0.1s ease, color 0.2s ease;
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 32px;
-      height: 32px;
-      line-height: 1;
+      width: 36px;
+      height: 36px;
       padding: 0;
+      box-sizing: border-box;
     }
 
-    .control-btn i {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 1em;
-      height: 1em;
-      line-height: 1em;
+    .control-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      display: block;
     }
 
     .control-btn:hover {
@@ -316,15 +311,18 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.15rem;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
       padding: 0;
-      position: relative;
     }
 
-    .play-btn i {
-      transform: translateX(1.5px); /* iOS/html2canvas 정렬 안정성 보장 */
+    .play-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+      display: block;
+      /* 재생 삼각 아이콘의 시각적 정중앙 정렬을 위한 미세 조정 */
+      margin-left: 2px;
     }
 
     .play-btn:hover {
@@ -837,10 +835,17 @@
           </div>
         </div>
 
+        <!-- 🛠️ SVG 순수 벡터 아이콘으로 교체하여 캡처 왜곡 완벽 차단 -->
         <div class="controls">
-          <button class="control-btn"><i class="fa-solid fa-backward-step"></i></button>
-          <button class="control-btn play-btn"><i class="fa-solid fa-play"></i></button>
-          <button class="control-btn"><i class="fa-solid fa-forward-step"></i></button>
+          <button class="control-btn" aria-label="이전 곡">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="control-btn play-btn" aria-label="재생">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button class="control-btn" aria-label="다음 곡">
+            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
         </div>
       </div>
 
@@ -944,7 +949,6 @@
       try {
         const currentOuterBg = getComputedStyle(document.documentElement).getPropertyValue('--outer-bg-color').trim();
 
-        /* 🛠️ iOS/웹킷 폰트 아이콘 수직 미스매치 방지용 html2canvas 옵션 강화 */
         const canvas = await html2canvas(wrapper, {
           scale: 2,
           useCORS: true,
@@ -954,12 +958,10 @@
 
         const dataUrl = canvas.toDataURL('image/png');
 
-        // 파일명 설정 로직
         const playlistTitle = document.getElementById('playlist-title').innerText.trim();
         let fileName = 'theme playlist.png';
 
         if (playlistTitle && playlistTitle.toLowerCase() !== 'character theme tracks' && playlistTitle !== 'charater theme tracks') {
-          // 파일명으로 사용할 수 없는 특수문자 제거 (\ / : * ? " < > |)
           const sanitizedTitle = playlistTitle.replace(/[\\/:*?"<>|]/g, '');
           if (sanitizedTitle) {
             fileName = `${sanitizedTitle}.png`;
