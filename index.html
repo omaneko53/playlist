@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <!-- 🎨 Font Awesome 아이콘 라이브러리 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <!-- 📸 이미지 저장(캡처)을 위한 html2canvas 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -266,12 +269,12 @@
       text-align: center;
     }
 
-    /* 🛠️ [수정] 컨트롤 버튼 & SVG 아이콘 고정 정렬 */
+    /* 🛠️ 재생/이전/다음 컨트롤 버튼 정밀 수정 */
     .controls {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 22px;
+      gap: 24px;
       width: 100%;
     }
 
@@ -284,15 +287,15 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 36px;
-      height: 36px;
+      width: 40px;
+      height: 40px;
       padding: 0;
       box-sizing: border-box;
     }
 
     .control-btn svg {
-      width: 18px;
-      height: 18px;
+      width: 22px;  /* 아이콘 큼직하게 확대 */
+      height: 22px;
       fill: currentColor;
       display: block;
     }
@@ -303,8 +306,8 @@
     }
 
     .play-btn {
-      width: 52px;
-      height: 52px;
+      width: 56px;  /* 메인 원형 크기 원상복구 */
+      height: 56px;
       border-radius: 50%;
       background: var(--primary-color);
       color: white;
@@ -317,12 +320,12 @@
     }
 
     .play-btn svg {
-      width: 20px;
-      height: 20px;
+      width: 26px;  /* 재생 아이콘 큼직하게 확대 */
+      height: 26px;
       fill: white;
       display: block;
-      /* 재생 삼각 아이콘의 시각적 정중앙 정렬을 위한 미세 조정 */
-      margin-left: 2px;
+      /* 재생 삼각형 착시로 인한 왼쪽 쏠림 방지 (오른쪽으로 1.5px 정밀 이동) */
+      transform: translateX(1.5px); 
     }
 
     .play-btn:hover {
@@ -835,7 +838,7 @@
           </div>
         </div>
 
-        <!-- 🛠️ SVG 순수 벡터 아이콘으로 교체하여 캡처 왜곡 완벽 차단 -->
+        <!-- 🛠️ 정밀 교정된 컨트롤 버튼 HTML -->
         <div class="controls">
           <button class="control-btn" aria-label="이전 곡">
             <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
@@ -952,16 +955,17 @@
         const canvas = await html2canvas(wrapper, {
           scale: 2,
           useCORS: true,
-          foreignObjectRendering: false,
           backgroundColor: currentOuterBg || '#f4f4f9'
         });
 
         const dataUrl = canvas.toDataURL('image/png');
 
+        // 파일명 설정 로직
         const playlistTitle = document.getElementById('playlist-title').innerText.trim();
         let fileName = 'theme playlist.png';
 
         if (playlistTitle && playlistTitle.toLowerCase() !== 'character theme tracks' && playlistTitle !== 'charater theme tracks') {
+          // 파일명으로 사용할 수 없는 특수문자 제거 (\ / : * ? " < > |)
           const sanitizedTitle = playlistTitle.replace(/[\\/:*?"<>|]/g, '');
           if (sanitizedTitle) {
             fileName = `${sanitizedTitle}.png`;
