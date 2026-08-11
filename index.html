@@ -2,15 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <!-- 📱 모바일/데스크톱 모드에서도 PC 너비(1280px) 기준으로 고정 출력되도록 설정 -->
   <meta name="viewport" content="width=1280">
   <title>캐릭터 테마 플레이리스트</title>
 
+  <!-- ✨ 구글 폰트 로드 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+  <!-- 📸 이미지 저장(캡처)을 위한 html2canvas 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -265,7 +266,7 @@
       text-align: center;
     }
 
-    /* 🚨 캡처 시 아이콘 쏠림 오류를 해결한 컨트롤 영역 CSS */
+    /* 🛡️ 고품질 벡터 SVG 아이콘 스타일 (쏠림 방지 및 모바일 완벽 호환) */
     .controls {
       display: flex;
       align-items: center;
@@ -277,23 +278,23 @@
     .control-btn {
       background: none;
       border: none;
-      font-size: 1.25rem; /* 아이콘 크기 살짝 조정 */
-      color: var(--text-main);
       cursor: pointer;
-      transition: transform 0.1s ease, color 0.2s ease;
-      display: inline-block; /* 중첩 flex 제거 */
-      vertical-align: middle;
-      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s ease;
+      padding: 4px;
     }
 
-    .control-btn i {
-      display: inline-block; /* html2canvas 좌표 쏠림 완벽 방지 */
-      vertical-align: middle;
+    .control-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-main);
+      transition: fill 0.3s ease;
     }
 
     .control-btn:hover {
       transform: scale(1.1);
-      color: var(--primary-color);
     }
 
     .play-btn {
@@ -301,28 +302,22 @@
       height: 52px;
       border-radius: 50%;
       background: var(--primary-color);
-      color: white;
-      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       transition: background-color 0.3s ease, transform 0.1s ease;
-      padding: 0;
-      /* 복잡한 flex 대신 block 요소의 line-height를 이용해 정중앙 정렬 */
-      display: inline-block;
-      line-height: 52px; 
-      text-align: center;
-      vertical-align: middle;
     }
 
-    .play-btn i {
-      margin-left: 3px; /* 재생 아이콘 시각적 중앙 보정 */
-      line-height: 52px;
+    .play-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
     }
 
     .play-btn:hover {
-      color: white;
       transform: scale(1.05);
     }
-    /* 🚨 컨트롤 영역 CSS 끝 */
 
     .track-list-container {
       flex: 1.4;
@@ -788,12 +783,14 @@
 </head>
 <body>
 
+  <!-- 📸 상하좌우 배경 여백 생성을 위한 외부 래퍼 -->
   <div class="capture-outer-wrapper" id="capture-wrapper">
     <div class="playlist-container">
       
       <input type="file" id="main-art-input" accept="image/*" style="display: none;">
       <input type="file" id="track-art-input" accept="image/*" style="display: none;">
 
+      <!-- [좌측] 메인 플레이어 -->
       <div class="player-card">
         <div class="album-art-wrapper">
           <span class="placeholder-icon"></span>
@@ -827,13 +824,21 @@
           </div>
         </div>
 
+        <!-- 🛡️ SVG 벡터 아이콘 적용 (모바일/데스크톱 완벽 고정) -->
         <div class="controls">
-          <button class="control-btn"><i class="fa-solid fa-backward-step"></i></button>
-          <button class="control-btn play-btn"><i class="fa-solid fa-play"></i></button>
-          <button class="control-btn"><i class="fa-solid fa-forward-step"></i></button>
+          <button class="control-btn" title="이전 곡">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="control-btn play-btn" title="재생/일시정지">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button class="control-btn" title="다음 곡">
+            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2V6z"/></svg>
+          </button>
         </div>
       </div>
 
+      <!-- [우측] 트랙 리스트 -->
       <div class="track-list-container">
         <div class="playlist-header-area">
           <h3 id="playlist-title" class="playlist-title" contenteditable="true">Character Theme Tracks</h3>
@@ -858,12 +863,14 @@
         </div>
         
         <ul class="track-list" id="track-list">
-          </ul>
+          <!-- JS로 동적 생성 -->
+        </ul>
       </div>
 
     </div>
   </div>
 
+  <!-- [크롭 모달 레이어] -->
   <div class="crop-modal-overlay" id="cropModal">
     <div class="crop-card">
       <h3>1:1 비율 크롭</h3>
@@ -883,6 +890,7 @@
     </div>
   </div>
 
+  <!-- [📱 모바일/iOS 저장 모달 레이어] -->
   <div class="save-modal-overlay" id="saveModal">
     <div class="save-card">
       <p>👇 이미지를 꾹 눌러서 [사진에 저장]을 선택하세요!</p>
@@ -938,17 +946,8 @@
 
         const dataUrl = canvas.toDataURL('image/png');
 
-        // 파일명 설정 로직
-        const playlistTitle = document.getElementById('playlist-title').innerText.trim();
-        let fileName = 'theme playlist.png';
-
-        if (playlistTitle && playlistTitle.toLowerCase() !== 'character theme tracks' && playlistTitle !== 'charater theme tracks') {
-          // 파일명으로 사용할 수 없는 특수문자 제거 (\ / : * ? " < > |)
-          const sanitizedTitle = playlistTitle.replace(/[\\/:*?"<>|]/g, '');
-          if (sanitizedTitle) {
-            fileName = `${sanitizedTitle}.png`;
-          }
-        }
+        // 파일명 고정 (플레이리스트 제목 개입 없이 고정된 파일명 사용)
+        const fileName = 'theme playlist.png';
 
         if (isMobileOrIOS()) {
           const saveModal = document.getElementById('saveModal');
